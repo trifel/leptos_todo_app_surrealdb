@@ -1,0 +1,6 @@
+/target
+/dist
+Cargo.lock
+
+# Don't check in the database file
+/surrealdb_data

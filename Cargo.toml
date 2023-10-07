@@ -1,0 +1,17 @@
+[package]
+name = "leptos_todo_app_surrealdb"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+surrealdb = { version = "1.0.0" }
+leptos = { version = "0.5.1", features = ["csr", "nightly"] }
+serde = { version = "1", features = ["derive"] }
+leptos_meta = { version = "0.5.1", features = ["csr", "nightly"] }
+leptos_router = { version = "0.5.1", features = ["csr", "nightly"] }
+thiserror = "1.0.38"
+http = { version = "0.2.8" }
+gloo-timers = { version = "0.3.0", features = ["futures"] }
+console_log = "1.0.0"
+console_error_panic_hook = "0.1.7"
+log = "0.4.20"
