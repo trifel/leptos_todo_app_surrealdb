@@ -5,10 +5,10 @@ edition = "2021"
 
 [dependencies]
 surrealdb = { version = "1.0.0" }
-leptos = { version = "0.5.1", features = ["csr", "nightly"] }
+leptos = { version = "0.5.2", features = ["csr", "nightly"] }
 serde = { version = "1", features = ["derive"] }
-leptos_meta = { version = "0.5.1", features = ["csr", "nightly"] }
-leptos_router = { version = "0.5.1", features = ["csr", "nightly"] }
+leptos_meta = { version = "0.5.2", features = ["csr", "nightly"] }
+leptos_router = { version = "0.5.2", features = ["csr", "nightly"] }
 thiserror = "1.0.38"
 http = { version = "0.2.8" }
 gloo-timers = { version = "0.3.0", features = ["futures"] }
