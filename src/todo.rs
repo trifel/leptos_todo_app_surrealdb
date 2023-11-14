@@ -203,20 +203,12 @@ pub fn Todos() -> impl IntoView {
                                 .filter(|submission| submission.pending().get())
                                 .map(|submission| {
                                     view! {
-                                        // stop the page from reloading!
-
                                         <li class="pending">{move || submission.input.get()}</li>
                                     }
                                 })
                                 .collect_view()
                         };
-                        view! {
-                            // stop the page from reloading!
-
-                            // stop the page from reloading!
-
-                            <ul>{existing_todos} {pending_todos}</ul>
-                        }
+                        view! { <ul>{existing_todos} {pending_todos}</ul> }
                     }}
 
                 </ErrorBoundary>
