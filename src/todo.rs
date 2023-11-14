@@ -5,7 +5,7 @@ use leptos_meta::*;
 use leptos_router::*;
 use serde::{Deserialize, Serialize};
 use surrealdb::{
-    engine::remote::ws::{Client, Ws},
+    engine::any::{connect, Any},
     opt::auth::Root,
     sql::Thing,
     Surreal,
@@ -20,35 +20,33 @@ pub struct Todo {
     completed: bool,
 }
 
-pub async fn initialize_db() -> Result<Surreal<Client>, TodoAppError> {
-    let surrealdb_server =
-        option_env!("SURREALDB_SERVER").unwrap_or("127.0.0.1");
-    let surrealdb_port = option_env!("SURREALDB_PORT").unwrap_or("8000");
-    let surrealdb_username =
-        option_env!("SURREALDB_USERNAME").unwrap_or("root");
-    let surrealdb_password =
-        option_env!("SURREALDB_PASSWORD").unwrap_or("root");
+pub async fn initialize_db() -> Result<Surreal<Any>, TodoAppError> {
+    let surrealdb_address = option_env!("SURREALDB_ADDRESS")
+        .unwrap_or("indxdb://leptos_todo_app_surrealdb");
+    let surrealdb_username = option_env!("SURREALDB_USERNAME");
+    let surrealdb_password = option_env!("SURREALDB_PASSWORD");
     let surrealdb_ns = option_env!("SURREALDB_NS").unwrap_or("leptos_examples");
     let surrealdb_db = option_env!("SURREALDB_DB").unwrap_or("todos");
 
-    let db =
-        Surreal::new::<Ws>(format!("{}:{}", surrealdb_server, surrealdb_port))
-            .await
-            .map_err(|_| {
-                TodoAppError::SurrealDBError(
-                    "couldn't connect to surrealDB server".into(),
-                )
-            })?;
-    db.signin(Root {
-        username: &surrealdb_username,
-        password: &surrealdb_password,
-    })
-    .await
-    .map_err(|_| {
-        TodoAppError::SurrealDBError(
-            "couldn't signin to surrealDB server".into(),
-        )
+    let db = connect(surrealdb_address).await.map_err(|_| {
+        TodoAppError::SurrealDBError("couldn't connect to surrealDB".into())
     })?;
+
+    if let (Some(surrealdb_username), Some(surrealdb_password)) =
+        (surrealdb_username, surrealdb_password)
+    {
+        db.signin(Root {
+            username: &surrealdb_username,
+            password: &surrealdb_password,
+        })
+        .await
+        .map_err(|_| {
+            TodoAppError::SurrealDBError(
+                "couldn't signin to surrealDB server".into(),
+            )
+        })?;
+    }
+
     db.use_ns(surrealdb_ns)
         .use_db(surrealdb_db)
         .await
@@ -63,8 +61,8 @@ pub async fn initialize_db() -> Result<Surreal<Client>, TodoAppError> {
     Ok(db)
 }
 
-pub async fn db() -> Result<Surreal<Client>, TodoAppError> {
-    let db = use_context::<Surreal<Client>>();
+pub async fn db() -> Result<Surreal<Any>, TodoAppError> {
+    let db = use_context::<Surreal<Any>>();
     match db {
         Some(db) => Ok(db),
         None => {
@@ -147,27 +145,30 @@ pub fn Todos() -> impl IntoView {
     view! {
         <div>
             <form on:submit=move |ev| {
-                // stop the page from reloading!
                 ev.prevent_default();
-
-                let value = add_todo_input_element().expect("add_todo input element not found").value();
+                let value = add_todo_input_element()
+                    .expect("add_todo input element not found")
+                    .value();
                 add_todo.dispatch(value);
             }>
                 <label>
-                    "Add a Todo"
-                    <input node_ref=add_todo_input_element type="text" name="title"/>
+                    "Add a Todo" <input node_ref=add_todo_input_element type="text" name="title"/>
                 </label>
                 <input type="submit" value="Add"/>
             </form>
-            <Transition fallback=move || view! {<p>"Loading..."</p> }>
-                <ErrorBoundary fallback=|errors| view!{<ErrorTemplate errors=errors/>}>
+            <Transition fallback=move || view! { <p>"Loading..."</p> }>
+                <ErrorBoundary fallback=|errors| {
+                    view! { <ErrorTemplate errors=errors/> }
+                }>
                     {move || {
                         let existing_todos = {
                             move || {
-                                todos.get()
+                                todos
+                                    .get()
                                     .map(move |todos| match todos {
                                         Err(e) => {
-                                            view! { <pre class="error">"Error: " {e.to_string()}</pre>}.into_view()
+                                            view! { <pre class="error">"Error: " {e.to_string()}</pre> }
+                                                .into_view()
                                         }
                                         Ok(todos) => {
                                             if todos.is_empty() {
@@ -177,13 +178,10 @@ pub fn Todos() -> impl IntoView {
                                                     .into_iter()
                                                     .map(move |todo| {
                                                         view! {
-
                                                             <li>
                                                                 {todo.title}
                                                                 <form on:submit=move |ev| {
-                                                                    // stop the page from reloading!
                                                                     ev.prevent_default();
-
                                                                     delete_todo.dispatch(todo.id.as_ref().unwrap().clone());
                                                                 }>
                                                                     <input type="submit" value="X"/>
@@ -198,29 +196,29 @@ pub fn Todos() -> impl IntoView {
                                     .unwrap_or_default()
                             }
                         };
-
                         let pending_todos = move || {
                             submissions
-                            .get()
-                            .into_iter()
-                            .filter(|submission| submission.pending().get())
-                            .map(|submission| {
-                                view! {
-                                    <li class="pending">{move || submission.input.get() }</li>
-                                }
-                            })
-                            .collect_view()
+                                .get()
+                                .into_iter()
+                                .filter(|submission| submission.pending().get())
+                                .map(|submission| {
+                                    view! {
+                                        // stop the page from reloading!
+
+                                        <li class="pending">{move || submission.input.get()}</li>
+                                    }
+                                })
+                                .collect_view()
                         };
-
                         view! {
+                            // stop the page from reloading!
 
-                            <ul>
-                                {existing_todos}
-                                {pending_todos}
-                            </ul>
+                            // stop the page from reloading!
+
+                            <ul>{existing_todos} {pending_todos}</ul>
                         }
-                    }
-                }
+                    }}
+
                 </ErrorBoundary>
             </Transition>
         </div>

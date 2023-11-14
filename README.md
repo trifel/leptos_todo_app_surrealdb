@@ -1,8 +1,28 @@
 # Leptos Todo App SurrealDB (CSR)
 
-This example creates a basic todo app with SurrealDB with Client Side Rendering. 
+This example creates a basic Todo app with SurrealDB, that runs in the browser (client-side rendering).
 
-## Getting started with SurrealDB
+## Getting started
+
+### Local with IndexedDB
+
+This example is preconfigured to use IndexedDB. To get started, you'll need to have trunk installed. Check out more about it [here](https://trunkrs.dev/)
+
+Start trunk with the following command:
+
+```bash
+trunk serve
+```
+
+You can now open the app in your browser on [http://127.0.0.1:8080/](http://127.0.0.1:8080/)
+
+You can also set the surreal address, namespace and database with environment variables. For example:
+
+```bash
+SURREALDB_ADDRESS=indxdb://leptos_todo_app_surrealdb SURREALDB_NS=leptos_examples SURREALDB_DB=todos trunk serve
+```
+
+### Remote/Local with SurrealDB Docker image
 
 To get started, you'll need to have Docker installed on your device first and then execute the following commands:
 
@@ -11,30 +31,21 @@ docker compose pull
 docker compose up -d
 ```
 
-This will start SurrealDB on port 8000. You can stop SurrealDB with: 
+This will start SurrealDB on port 8000. You can stop SurrealDB with:
+
 ```bash
 docker compose stop
 ```
 
-In case you prefer to install SurrealDB directly onto your system instead of using Docker, you have the option to do so. For additional information and instructions regarding the installation process, please refer to the [SurrealDB documentation](https://surrealdb.com/docs/installation). After the installation, you may need to set several parameters as environment variables, e.g.:
+In case you prefer to install SurrealDB directly onto your system instead of using Docker, you have the option to do so. For additional information and instructions regarding the installation process, please refer to the [SurrealDB documentation](https://surrealdb.com/docs/installation).
+
+Start trunk with the following command:
 
 ```bash
-SURREALDB_SERVER=127.0.0.1 SURREALDB_PORT=8000 SURREALDB_USERNAME=root SURREALDB_PASSWORD=root SURREALDB_NS=leptos_examples SURREALDB_DB=todos trunk serve
-```
-These variables indicate the server address, port, username, password, namespace, and database respectively. If you are using this example with Docker, you don't need to set these variables as they are already set in the `docker-compose.yml` file.
-
-## Client Side Rendering
-Before you start, you'll need to have trunk installed. Check out more about it [here](https://trunkrs.dev/)
-
-```bash
-cargo install --locked trunk
-``` 
-2. Build the site in watch mode, recompiling on file changes
-```bash
-trunk serve
+SURREALDB_ADDRESS=ws://127.0.0.1:8000 SURREALDB_USERNAME=root SURREALDB_PASSWORD=root SURREALDB_NS=leptos_examples SURREALDB_DB=todos trunk serve
 ```
 
-Open browser on [http://localhost:8080/](http://localhost:8080/)
+These variables indicate the surreal address, username, password, namespace and database respectively.
 
 ## Server Side Rendering
 
